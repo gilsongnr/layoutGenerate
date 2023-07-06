@@ -1,0 +1,17 @@
+
+.file-header {
+    background-color: #1955a3 !important;
+    color: white !important;
+}
+.line-header {
+    background-color: #19a362 !important;
+    color: white !important;
+}
+.line-is-hearder{
+    background-color: #032e1a !important;
+}
+
+.accordion-button:not(.collapsed){
+     background-color: var(--bs-gray-500) !important; 
+    color: black !important;
+}
