@@ -200,16 +200,23 @@ function createButtonDelete(){
 function tableColsAddRow(table,  name, tp, pos, size, dec, lit, check, desc){
   let row = table.insertRow();
   function add(value){
-    row.insertCell().textContent = value;
+    let cell = row.insertCell();
+    if (value != undefined) {
+      if (value != ""){
+        value = value.replaceAll("\n", "<br>")
+      }
+      cell.innerHTML = value;
+    }
+    return cell
   }
-  add(name)
+  add(name).style.textAlign = "left"
   add(tp) 
   add(pos) 
   add(size) 
   add(dec) 
   add(lit) 
-  add(check) 
-  add(desc)
+  add(check).style.textAlign = "left" 
+  add(desc).style.textAlign = "justify"
   //add("x")
   row.insertCell().appendChild(createButtonDelete()).onclick = ()=>{
     if (confirm("Excluir coluna: " + row.cells[0].textContent)){
