@@ -270,9 +270,12 @@ function createLine(lineCode, show){
           this.line_descr.id = "line_descr" + this.id
           dbodyA.appendChild(createDivGroup("col-12", this.line_descr, "Descrição da Linha"))
          
-          let div = dbodyA.appendChild(createDivClass("table-container text-center"))
+          let div = dbodyA.appendChild(createDivClass("col"))
           let h5 = div.appendChild(document.createElement("h5"))
+          h5.classList = "text-center"
           h5.innerHTML = "Colunas"
+          div = div.appendChild(createDivClass("table-container"))
+          div.style.overflow = "scroll"
           this.tableCols = div.appendChild(document.createElement("table"))
           this.tableCols.classList = "table table-striped table-bordered"
           let tr = this.tableCols.appendChild(document.createElement('tr'));
