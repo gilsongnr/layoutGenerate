@@ -7,11 +7,11 @@
     <link href="assets/css/style.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
 </head>
 <body>
     <div class="container">
-    <div class="accordion" id="accordionFile">
-        
+    <div class="accordion" id="accordionFile">        
         
         <div class="accordion-item">
           <h1 class="accordion-header" id="headingFile">
@@ -71,8 +71,7 @@
                       <label for="file_desc">Descrição do Arquivo:</label>
                       <textarea id="file_desc" class="form-control" rows="4"></textarea>
                     </div>
-                    <div class="form-group col-12 mt-2">
-                    
+                    <div class="form-group col-12 mt-2">                    
                       <button class="btn btn-success col-12"  onclick="addLineDlg()">Adicionar linha</button>
                     </div>
                   </div>
@@ -89,8 +88,81 @@
         <button class="btn btn-primary"  onclick="loadFromFile()" id="btnLoad">Carregar de arquivo</button>
       <button class="btn btn-success"  onclick="saveToFile()">Salvar</button>
       </div>
-      </div>
+      </div>          
     </div>
+    
+
+    <div class="modal fade" id="edt_colModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="modal01Label">Editor de coluna</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+     
+            <div class="container-fluid">
+                    <div class="row">
+
+                        <div class="form-group col-6">
+                          <label for="edt_col_name">Nome</label>
+                          <input type="text" id="edt_col_name" class="form-control">
+                        </div>
+                        <div class="form-group col-6">
+                          <label for="edt_col_tp">Tipo</label>
+                          <select id="edt_col_tp" class="form-control">
+                            <option class="option" value="A">Alfanumérico</option>
+                            <option class="option" value="D">Data</option>
+                            <option class="option" value="H">Hora</option>
+                            <option class="option" value="T">Data e Hora</option>
+                            <option class="option" value="D">Data</option>
+                            <option class="option" value="N">Numérico</option>
+                            <option class="option" value="n">Código Numérico</option>
+                            <option class="option" value="X">Número da linha</option>
+                            <option class="option" value="E">Enumerator</option>
+                          </select>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-4">
+                          <label for="edt_col_pos">Posição</label>
+                          <input type="number" id="edt_col_pos" class="form-control">
+                        </div>
+                        <div class="form-group col-4">
+                          <label for="edt_col_size">Tamanho</label>
+                          <input type="number" id="edt_col_size" class="form-control">
+                        </div>
+                        <div class="form-group col-4">
+                          <label for="edt_col_dec">Decimais</label>
+                          <input type="number" id="edt_col_dec" class="form-control">
+                        </div>
+                        <div class="form-group col-12">
+                          <label for="edt_col_literal">Valor Literal</label>
+                          <input type="text" id="edt_col_literal" class="form-control" placeholder="Valor fixo a ser gravado no banco de dados">
+                        </div>
+                    </div>
+                    <div class="row">
+                      <div class="form-group">
+                        <label for="edt_col_Check" id="label_col_Check">Validação</label>
+                        <textarea id="edt_col_Check" class="form-control" rows="4"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="edt_col_descr">Descrição</label>
+                        <textarea id="edt_col_descr" class="form-control" rows="4"></textarea>
+                      </div>
+                    </div>              
+            </div>
+          
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="edt_col_btn_save">Savar</button>
+          </div>
+        </div>
+      </div>
+    </div> 
 <script src="assets/js/script.js"></script>
 <script src="assets/js/lineSplit.js"></script>
 </body>

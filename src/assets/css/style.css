@@ -15,3 +15,9 @@
      background-color: var(--bs-gray-500) !important; 
     color: black !important;
 }
+.hover-red:hover {
+    color: red !important;
+}
+.hover-green:hover {
+    color: goldenrod !important;
+  }
