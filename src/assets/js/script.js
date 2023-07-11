@@ -282,7 +282,7 @@ function createLine(lineCode, show){
           
           this.line_descr = document.createElement("textarea")
           this.line_descr.classList = "form-control"
-          this.line_descr.rows = 6
+          this.line_descr.rows = 1
           this.line_descr.id = "line_descr" + this.id
           dbodyA.appendChild(createDivGroup("col-12", this.line_descr, "Descrição da Linha"))
          
@@ -293,7 +293,7 @@ function createLine(lineCode, show){
           div = div.appendChild(createDivClass("table-container"))
           div.style.overflow = "scroll"
           this.tableCols = div.appendChild(document.createElement("table"))
-          this.tableCols.classList = "table table-striped table-bordered"
+          this.tableCols.classList = "table table-striped table-bordered text-center"
           let tr = this.tableCols.appendChild(document.createElement('tr'));
           colNames.titles.forEach(i => {tr.appendChild(document.createElement("th")).innerHTML = i});        
           btnAddCol.onclick = ()=>{columnEditor.addRow(this.tableCols)}
@@ -313,29 +313,27 @@ function createButtonSvg(svgClass){
 
 function tableColsAddRow(table,  name, tp, pos, size, dec, lit, check, desc){
   let row = table.insertRow()
-  function add(value, proc){
+  function add(value, proc, align){
       let cell = row.insertCell()
-      if (value != undefined) {
-        proc(value, cell)
-      }
+      if (align != undefined){cell.style.textAlign = align}
+      if (value != undefined) {proc(value, cell)}      
       return cell
   }
-  function addA(value){return add(value, setCellA)}
-  let colName = addA(name)
-  colName.style.textAlign = "left"
+  function addA(value, align){return add(value, setCellA, align)}
+  let col = addA(name, "left")
   //col.style.color = "#0d6efd"
-  colName.style.cursor = "pointer"
-  colName.classList.add("hover-green")
-  colName.onclick =  ()=>{columnEditor.edit(row.cells)}  
+  col.style.cursor = "pointer"
+  col.classList.add("hover-green")
+  col.onclick =  ()=>{columnEditor.edit(row.cells)}  
 
-  addA(tp) 
+  addA(tp)
   addA(pos) 
   addA(size) 
   addA(dec) 
   addA(lit) 
-  add(check, setCellB).style.textAlign = "left"
-  add(desc, setCellB).style.textAlign = "justify"
-  row.insertCell().appendChild(createButtonSvg("bi bi-pencil-square hover-green")).onclick = colName.onclick
+  add(check, setCellB, "left")
+  add(desc, setCellB, "justify")
+  row.insertCell().appendChild(createButtonSvg("bi bi-pencil-square hover-green")).onclick = col.onclick
   row.insertCell().appendChild(createButtonSvg("bi bi-trash3 hover-red")).onclick = ()=>{
     if (confirm("Excluir coluna: " + row.cells[0].textContent)){
       table.deleteRow(row.rowIndex);
@@ -461,11 +459,10 @@ function saveToFile(){
     //check(edtMeta_name)
     check(edtFileName)
     check(edt_table_name_prefix)
-    check(file_desc)
+    //check(file_desc)
     
-    if (erros == 0){
-      then()
-      obj.form.hide()                              
+    if (erros != 0){
+        return
     }
 
   let lineHeaderCode = "0000"
@@ -492,7 +489,6 @@ function saveToFile(){
         file_desc.value
     ]
 
-
   let csvContent = "data:text/csv;charset=utf-8,F" + joinList(lfile) + "\n"
   lines.forEach(line => {
     csvContent += "L" + joinList(line.values) + "\n"
@@ -518,18 +514,22 @@ function load(content){
    alert("Arquivo não é válido")
    return
   }
-  document.getElementById("meta_name").value = cols[1]
-         document.getElementById("file_versao").value = cols[2] 
-         document.getElementById("file_line_code_pos").value  = cols[3] 
-        let lineHeaderCode = cols[4]
-        document.getElementById("file_col_separator").value = cols[6]
-        edtFileName.value  = cols[7]
-        document.getElementById("file_natural_keys").value = cols[8]
-        document.getElementById("file_date_mask").value = cols[9]
-        document.getElementById("file_version_col_name").value = cols[10]
-        document.getElementById("file_table_name_prefix").value = cols[11]
-        document.getElementById("file_desc").value = cols[12]
-        labelfilename.innerHTML = edtFileName.value
+  function setN(name, idx){
+      setCtrlValue(document.getElementById(name), cols[idx])
+  }
+  setN("meta_name", 1);
+  setN("file_versao", 2);
+  setN("file_line_code_pos", 3);
+  setN("file_col_separator", 6);
+  setCtrlValue(edtFileName, cols[7])
+  setN("file_natural_keys", 8);
+  setN("file_date_mask", 9);
+  setN("file_version_col_name", 10);
+  setN("file_table_name_prefix", 11);
+  setN("file_desc", 12);
+  
+  let lineHeaderCode = cols[4]
+  labelfilename.innerHTML = edtFileName.value
 
    let lineObj
    while (true){                
