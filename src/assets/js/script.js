@@ -7,6 +7,28 @@ edtFileName.onchange = ()=>{
   labelfilename.innerHTML = edtFileName.value
 }
 
+const classCtrlError = "is-invalid"
+
+function setCtrlNoError(ctrl){
+    ctrl.classList.remove(classCtrlError)  
+}
+
+function setCtrlInError(edt){
+    const evtName = "change" 
+    edt.classList.add(classCtrlError)
+    edt.addEventListener(evtName, modifyText);
+    function modifyText(){
+        setCtrlNoError(edt)
+        edt.removeEventListener(evtName, modifyText)
+    }
+}
+function setCtrlValue(edt, value){
+    edt.value = value
+    setCtrlNoError(edt)                
+}
+function isValidName(name){
+     return (name != undefined) && (name != "") && name.match(/^[A-Za-z_]+[\w_]*$/)
+}
 const colNames = {
     name: "name",
     tp  : "tp",
@@ -19,34 +41,18 @@ const colNames = {
     list: ["name", "tp", "pos", "size", "dec", "literal", "Check", "descr"],
     titles: ["Nome", "Tipo", "Posição", "Tamanho", "Decimais", "Valor literal", "Check", "Descrição", ""]
 }
-const classCtrlError = "is-invalid"
 function checkText(s){
       return (s != undefined) && (s.trim() != "")
 }
 const columnEditor = {
   form   : new bootstrap.Modal(document.getElementById('edt_colModal'), {}),
   getCtrl: function (colName){return document.getElementById("edt_col_" + colName)},
-  setCtrlNoError: function(ctrl){ctrl.classList.remove(classCtrlError)},
-  setCtrlValueByName: function(name, value){
-                          const edt = this.getCtrl(name)
-                          edt.value = value
-                          this.setCtrlNoError(edt)                
-                      },
   validateCtrls: function(){
                           let erros = 0;
                           const obj = this
                           function setError(edt){
                               erros++;
-                              const evtName = "change" 
-                              //this.setCtrlInError(edt)
-                              edt.classList.add(classCtrlError)
-                              edt.addEventListener(evtName, modifyText);
-                              function modifyText(){
-                                  obj.setCtrlNoError(edt)
-                                  console.log("modifyText")
-                                  console.log(edt.id)
-                                  edt.removeEventListener(evtName, modifyText)
-                              }
+                              setCtrlInError(edt)
                           }
                           function check(edt){
                                         if (checkText(edt.value)) {
@@ -56,7 +62,7 @@ const columnEditor = {
                                         return false  
                                     }
                           
-                          if ((this.edtCtrlName.value == undefined) || (this.edtCtrlName.value == "") || (!this.edtCtrlName.value.match(/^[A-Za-z_]+[\w_]*$/))){
+                          if (!isValidName(this.edtCtrlName.value)){
                                 setError(this.edtCtrlName)
                           }
                           
@@ -67,6 +73,7 @@ const columnEditor = {
                           return erros
                     },
   formExecute: function(then){
+                          this.editsChanged()
                           const obj = this
                           function saveClick(evt){
                               if (obj.validateCtrls() == 0){
@@ -78,7 +85,7 @@ const columnEditor = {
                           this.form.show()
                     },                                  
   addRow : function(table){    
-                  for (let i = 0; i < 8; i++) {this.setCtrlValueByName(colNames.list[i], "")} 
+                  for (let i = 0; i < 8; i++) {setCtrlValue(this.getCtrl(colNames.list[i]), "")} 
                   if (table.rows.length > 1){
                       const lastRow = table.rows[table.rows.length - 1]
                       this.getCtrl(colNames.pos).value = parseInt(lastRow.cells[2].textContent) + parseInt(lastRow.cells[3].textContent)
@@ -89,25 +96,34 @@ const columnEditor = {
                        
                   })
               },
-  edit: function(cells){  
-                  for (let i = 0; i < 6; i++) {this.setCtrlValueByName(colNames.list[i], getCellA(cells[i]))}                 
-                  this.setCtrlValueByName("Check", getCellB(cells[6]))
-                  this.setCtrlValueByName("descr", getCellB(cells[7]))
+  edit: function(cells){
+                  const ctrls = []  
+                  for (let i = 0; i < 6; i++) {
+                      const ctrl = this.getCtrl(colNames.list[i])
+                      setCtrlValue(ctrl, getCellA(cells[i]))
+                      ctrls.push(ctrl)
+                  }  
+                  const edtCheck = this.getCtrl("Check")
+                  const edtDescr = this.getCtrl("descr")
+                  setCtrlValue(edtCheck, getCellB(cells[6]))
+                  setCtrlValue(edtDescr, getCellB(cells[7]))
                   this.formExecute(()=>{ 
-                      for (let i = 0; i < 6; i++) {
-                        setCellA(this.getCtrl(colNames.list[i]).value, cells[i])
+                      for (let i = 0; i < ctrls.length; i++) {
+                        setCellA(ctrls[i].value, cells[i])
                       }   
-                      setCellB(this.getCtrl("Check").value, cells[6])
-                      setCellB(this.getCtrl("descr").value, cells[7])
+                      setCellB(edtCheck.value, cells[6])
+                      setCellB(edtDescr.value, cells[7])
                   })
         },
+  tpChanged: function(){this.edtCtrlDec.disabled = this.edtCtrlTp.value != "N" }, 
+  editsChanged: function (){
+    this.tpChanged()
+  },
   init: function(){
         this.edtCtrlName = this.getCtrl("name")
         this.edtCtrlTp = this.getCtrl("tp")
         this.edtCtrlDec = this.getCtrl("dec")        
-        this.edtCtrlTp.onchange = ()=>{
-          this.edtCtrlDec.disabled = this.edtCtrlTp.value != "N"
-        }
+        this.edtCtrlTp.onchange = ()=>{tpChanged()}
       }
 
 }
@@ -335,12 +351,27 @@ function addLine(lineCode, show){
   return obj
 }
 function addLineDlg(){
-    let lineCode = prompt("Infrme o código da linha", "");
-
-    if (lineCode != null) {
-      collapseAllAccordionFile() 
-      addLine(lineCode, true)    
+    collapseAll(accordionFile)
+    let line = accordionFile.querySelector('.accordion-button.line-header');
+    let code
+    while(true){
+        code = prompt("Informe o código da linha", "")
+        if (code==null) return
+        code = code.trim()
+        if (code == "") {
+          alert("Código de linha não pode ser branco")
+          continue
+        }
+        if (line){
+          if (line.obj.code.length != code.length){
+            alert("Códigos de linhas devem ser todos de tamanhos iguais")
+            continue            
+          }
+        }
+        break      
     }
+    
+    addLine(code, true)    
 }
 
 function collapseAll(accordionFile) {
@@ -351,11 +382,8 @@ function collapseAll(accordionFile) {
             b.classList.remove('show')
           }
     }
-  }
-     
-function collapseAllAccordionFile() {
-    collapseAll(accordionFile)
 }
+     
 function getCols(obj){
   let rows = obj.tableCols.rows;
   let x = rows.length;
@@ -406,24 +434,66 @@ function joinList(list){
 }
 
 function saveToFile(){
+    let erros = 0;
+    function setError(edt){
+        erros++;
+        setCtrlInError(edt)
+    }
+    function check(edt){
+                  if (checkText(edt.value)) {
+                    return true
+                  }
+                  setError(edt)
+                  return false  
+              }
+
+    const edtMeta_name = document.getElementById("meta_name")
+    const edt_table_name_prefix =  document.getElementById("file_table_name_prefix")
+    const file_desc = document.getElementById("file_desc")
+    
+    if (!isValidName(edtMeta_name.value)){
+          setError(edtMeta_name)
+    }
+    if (!isValidName(edtMeta_name.value)){
+          setError(edt_table_name_prefix)
+    }
+
+    //check(edtMeta_name)
+    check(edtFileName)
+    check(edt_table_name_prefix)
+    check(file_desc)
+    
+    if (erros == 0){
+      then()
+      obj.form.hide()                              
+    }
+
   let lineHeaderCode = "0000"
-  const fileName = document.getElementById("meta_name").value
+
+    let lines = getLines()     
+    if (lines.length < 1){
+      alert("Nenhuma linha informada")
+      return
+    }
+
+
+  const fileName = edtMeta_name.value
   const lfile = [
-        fileName, 
+        edtMeta_name.value, 
         document.getElementById("file_versao").value, 
         document.getElementById("file_line_code_pos").value, 
         lineHeaderCode,
         document.getElementById("file_col_separator").value, 
-        edtFileName.value, 
+        fileName, 
         document.getElementById("file_natural_keys").value, 
         document.getElementById("file_date_mask").value, 
         document.getElementById("file_version_col_name").value, 
-        document.getElementById("file_table_name_prefix").value, 
-        document.getElementById("file_desc").value
+        edt_table_name_prefix.value, 
+        file_desc.value
     ]
-    let csvContent = "data:text/csv;charset=utf-8,F" + joinList(lfile) + "\n"
-    let lines = getLines()     
-  
+
+
+  let csvContent = "data:text/csv;charset=utf-8,F" + joinList(lfile) + "\n"
   lines.forEach(line => {
     csvContent += "L" + joinList(line.values) + "\n"
     line.cols.forEach(col => {
@@ -439,7 +509,54 @@ function saveToFile(){
   document.body.appendChild(link);
   link.click();
 }
+function load(content){
+  let lines = content.split('\n');
+  if (lines.length < 1) return;
+  lineSpliter.reset(lines)
+  let cols = lineSpliter.next()
+  if (cols[0] != "F"){
+   alert("Arquivo não é válido")
+   return
+  }
+  document.getElementById("meta_name").value = cols[1]
+         document.getElementById("file_versao").value = cols[2] 
+         document.getElementById("file_line_code_pos").value  = cols[3] 
+        let lineHeaderCode = cols[4]
+        document.getElementById("file_col_separator").value = cols[6]
+        edtFileName.value  = cols[7]
+        document.getElementById("file_natural_keys").value = cols[8]
+        document.getElementById("file_date_mask").value = cols[9]
+        document.getElementById("file_version_col_name").value = cols[10]
+        document.getElementById("file_table_name_prefix").value = cols[11]
+        document.getElementById("file_desc").value = cols[12]
+        labelfilename.innerHTML = edtFileName.value
 
+   let lineObj
+   while (true){                
+     cols = lineSpliter.next()
+     if (cols.length == 0){
+       break
+     }
+     switch (cols[0]) {
+       case "L": 
+           lineObj = addLine(cols[1], false)
+         
+           if (lineHeaderCode == lineObj.code){
+             lineObj.setIsHeader(true)
+           }
+           lineObj.line_level.value = cols[3]
+           lineObj.line_parente.value = cols[6]
+           lineObj.table_sulfix.value = cols[11]
+           lineObj.line_descr.value = cols[12]
+           break
+       case "C": 
+           tableColsAddRow(lineObj.tableCols, cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7])
+           break
+       default:
+         console.log(cols)
+     }
+   }
+}
 const inputFile = document.createElement("input")
 inputFile.type = "file"
 inputFile.accept = "text/csv"
@@ -455,52 +572,7 @@ inputFile.onchange = function () {
      }
          let reader = new FileReader();
          reader.onload = function(event){
-             let lines = event.target.result.split('\n');
-             if (lines.length < 1) return;
-             lineSpliter.reset(lines)
-             let cols = lineSpliter.next()
-             if (cols[0] != "F"){
-              alert("Arquivo não é válido")
-              return
-             }
-             document.getElementById("meta_name").value = cols[1]
-                    document.getElementById("file_versao").value = cols[2] 
-                    document.getElementById("file_line_code_pos").value  = cols[3] 
-                   let lineHeaderCode = cols[4]
-                   document.getElementById("file_col_separator").value = cols[6]
-                   edtFileName.value  = cols[7]
-                   document.getElementById("file_natural_keys").value = cols[8]
-                   document.getElementById("file_date_mask").value = cols[9]
-                   document.getElementById("file_version_col_name").value = cols[10]
-                   document.getElementById("file_table_name_prefix").value = cols[11]
-                   document.getElementById("file_desc").value = cols[12]
-                   labelfilename.innerHTML = edtFileName.value
-
-              let lineObj
-              while (true){                
-                cols = lineSpliter.next()
-                if (cols.length == 0){
-                  break
-                }
-                switch (cols[0]) {
-                  case "L": 
-                      lineObj = addLine(cols[1], false)
-                    
-                      if (lineHeaderCode == lineObj.code){
-                        lineObj.setIsHeader(true)
-                      }
-                      lineObj.line_level.value = cols[3]
-                      lineObj.line_parente.value = cols[6]
-                      lineObj.table_sulfix.value = cols[11]
-                      lineObj.line_descr.value = cols[12]
-                      break
-                  case "C": 
-                      tableColsAddRow(lineObj.tableCols, cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7])
-                      break
-                  default:
-                    console.log(cols)
-                }
-              }
+             load(event.target.result)
          };
          reader.readAsText(file, "windows-1252");
   }
@@ -509,33 +581,9 @@ inputFile.onchange = function () {
 function loadFromFile(){
   inputFile.click()
 }
-// loadTest()
-
-// function loadTest(){
-//   addLine("AAAA")
-//   //addLine("2000")
-  
-// const defs = ["meta_name", 
-//               //"file_versao", 
-//               //"file_line_code_pos", 
-//               "meta_name", 
-//               "file_versao", 
-//               //"file_line_code_pos", 
-//               //"file_col_separator", 
-//               "file_name", 
-//               "file_natural_keys", 
-//               //"file_date_mask", 
-//               //"file_version_col_name", 
-//               "file_table_name_prefix"
-//             ] 
-// defs.forEach(i => {document.getElementById(i).value = i});  
-
-// document.getElementById("file_desc").value = `O arquivo é composto de:
-// -Um único registro do tipo 1 (Identificação do Arquivo)
-// -Um ou mais registros do tipo 2 (Município)
-// -Um ou mais registros do tipo 3 (DECLAN) para cada registro do tipo 2 (Município)
-// -Um ou dois registros do tipo 4 (Ajustes e Distribuições) para cada registro do tipo 3 (DECLAN)
-// -Um registro do tipo 5 (Receita) para cada registro do tipo 3 (DECLAN)
-// -Um registro do tipo 6 (Contato) para cada registro do tipo 3 (DECLAN)
-// `
-// }
+function loadExample(){
+  const xhttp = new XMLHttpRequest();
+  xhttp.onload = function() {load(this.responseText)}
+  xhttp.open("GET", "examples/layout - declan.csv");
+  xhttp.send();
+}

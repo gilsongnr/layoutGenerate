@@ -71,9 +71,6 @@
                       <label for="file_desc">Descrição do Arquivo:</label>
                       <textarea id="file_desc" class="form-control" rows="4"></textarea>
                     </div>
-                    <div class="form-group col-12 mt-2">                    
-                      <button class="btn btn-success col-12"  onclick="addLineDlg()">Adicionar linha</button>
-                    </div>
                   </div>
             </div>
           </div>
@@ -81,13 +78,20 @@
         
       
       </div>
-      <div class="row mt-2">
+      <div class="row mt-2 mb-4">
         <div class="col">
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="btnLoad" data-bs-toggle="dropdown" aria-expanded="false">Carregar de arquivo</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"  onclick="loadFromFile()">Arquivo local</a></li>
+              <li><a class="dropdown-item" href="#"  onclick="loadExample()">Exemplo</a></li>
+            </ul>
+          </div>
         </div>
-      <div class="col-auto">
-        <button class="btn btn-primary"  onclick="loadFromFile()" id="btnLoad">Carregar de arquivo</button>
-      <button class="btn btn-success"  onclick="saveToFile()">Salvar</button>
-      </div>
+        <div class="col-auto">
+          <button class="btn btn-primary"  onclick="addLineDlg()">Adicionar linha</button>
+          <button class="btn btn-success"  onclick="saveToFile()">Salvar</button>
+        </div>
       </div>          
     </div>
     
