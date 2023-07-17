@@ -1,11 +1,71 @@
 "use strict";
 
+const panelwait01 = document.getElementById("panelwait01")
+panelwait01.style.display = "none"
 
-const edtFileName = document.getElementById("file_name")
-const labelfilename = document.getElementById("labelfilename")
-edtFileName.onchange = ()=>{
-  labelfilename.innerHTML = edtFileName.value
+function createElementClass(tp, classList){
+  const e = document.createElement(tp)
+  e.classList = classList
+  return e
 }
+function createDiv(){
+  return document.createElement("div")
+}
+function createDivClass(classList){
+  let div = createDiv()
+  div.classList = classList
+  return div
+}
+function createDivClasses(classeList){
+let div = createDiv()
+classeList.forEach(s => {
+  div.classList.add(s)
+});
+return div
+}
+function createDivCtrl(classList, input, title){
+    if (title == undefined){
+      title = input.placeholder
+    }
+    let div = createDivClass(classList)
+    let label = div.appendChild(document.createElement("label"))
+    label.setAttribute("for", input.id)
+    label.innerHTML = title
+    div.appendChild(input)
+    return div
+}
+function createDivGroup(classList, input, title){
+    return createDivCtrl("form-group " + classList, input, title) 
+}
+
+function createInput(id, placeholder, required, inputType, classList){
+    if (classList == undefined){
+      classList = "form-control"
+    }
+    let input = createElementClass("input", classList)
+    if (inputType != undefined){
+      input.type = inputType
+    }
+    if (placeholder != undefined){
+      input.placeholder = placeholder
+    }
+    if (id != undefined){
+      input.id=id
+    }
+    
+    if (required != undefined){
+      input.required = required
+    }
+    return input
+} 
+function createInputText(id, placeholder, required){return createInput(id, placeholder, required, "text")} 
+function createInputNumber(id, placeholder, required){return createInput(id, placeholder, required, "number")} 
+function createInputTextArea(id, rows){
+    const a = createElementClass("textarea", "form-control")
+    a.id = id  
+    a.rows = rows
+    return a
+} 
 
 const classCtrlError = "is-invalid"
 
@@ -29,6 +89,83 @@ function setCtrlValue(edt, value){
 function isValidName(name){
      return (name != undefined) && (name != "") && name.match(/^[A-Za-z_]+[\w_]*$/)
 }
+
+const fileForm = {
+  panel: document.querySelector(".accordion-body").appendChild(createDivClass("row")),
+  appendInput: function (id, title, classList){    
+    const a = createInputText(id, "")
+    this.panel.appendChild(createDivGroup(classList, a, title)) 
+    return a
+  },
+  init: function(){
+    this.edtName      = this.appendInput("a1", "Nome do layout", "col-12") 
+    this.edtName.required = true
+    this.edtMeta_name = this.appendInput("a2", "Identificação", "col-5 col-lg-5 col-sm-8 col-md-7")
+    this.edtVersion   = this.appendInput("a3", "Versão", "col-4 col-lg-2 col-sm-4 col-md-2")
+    this.edtTable_name_prefix = this.appendInput("a4", "Nome no banco", "col-5 col-sm-8 col-md-3")
+
+    this.edtline_code_pos = createInputNumber("a5")
+    this.panel.appendChild(createDivGroup("col-4 col-lg-2 col-sm-4 col-md-3", this.edtline_code_pos, "Pos Cód Linha")) 
+    this.edtline_code_pos.value="1"
+
+    this.edtnatural_keys = this.appendInput("a6", "Chave natural", "col-7 col-lg-4 col-sm-8 col-md-9")
+    this.edtcol_separator = this.appendInput("a7", "Separador", "col-5 col-lg-2 col-sm-4 col-md-2")
+    this.edtcol_separator.value="|" 
+
+    this.edtversion_col_name = this.appendInput("a8", "Coluna Versão", "col-7 col-7 col-lg-2 col-sm-8 col-md-6")
+
+    this.edtdate_mask = this.appendInput("a9", "Máscara de Data", "col-5 col-sm-4 col-md-4")
+
+    /*
+                        <div class="form-group ">
+                          <label for="file_date_mask">:</label>
+                          <select id="file_date_mask" class="form-control">
+                            <option class="option" value="ddMMyyyy">30/12/2023</option>
+                            <option class="option" value="yyyyMMdd">2023/12/30</option>
+                            <option class="option" value="MMddyyyy">12/30/2023</option>
+                          </select>
+                        </div>
+    */
+
+    this.edtdescr = createInputTextArea("a10", 1)
+    this.panel.appendChild(createDivGroup("col-12", this.edtdescr, "Descrição do Arquivo")) 
+
+    this.inputFile = document.createElement("input")
+    this.inputFile.type = "file"
+    this.inputFile.accept = "text/csv"
+
+    const self = this
+    this.inputFile.onchange = function () {
+      let files = this.files;               
+      if (files && files.length) {
+        let file = files[0];
+      
+        if (file.size > 3 * 1024 * 1024){
+            alert('Ficheiro demasiado grande')
+            return
+        }
+        const reader = new FileReader();
+        reader.onload = function(event){
+            load(self, event.target.result)
+        };
+        reader.readAsText(file, "windows-1252");
+      }
+    };      
+
+    this.lbfile_name = document.getElementById("lbfile_name")
+    this.edtName.onchange = this.edtNameChange
+  },
+  edtNameChange: function(){
+    this.lbfile_name.innerHTML = this.edtName.value
+  }
+}
+
+function loadFromFile(){fileForm.inputFile.click()}
+
+fileForm.init()
+
+
+
 const colNames = {
     name: "name",
     tp  : "tp",
@@ -43,6 +180,71 @@ const colNames = {
 }
 function checkText(s){
       return (s != undefined) && (s.trim() != "")
+}
+function loadRemote(){  
+  panelwait01.style.display = "flex"
+  const xhttp = new XMLHttpRequest();
+  xhttp.onload = function(result) {
+    //const xmlDoc = xhttp.responseXML;
+    //const cd = xmlDoc.getElementsByTagName("CD");
+    //console.log(this.responseText)
+    //const obj = JSON.parse(this.responseText)
+    //console.log(obj)
+    try {
+      doloadRemote(JSON.parse(this.responseText));
+    } finally {
+      panelwait01.style.display = "none"
+    }    
+  }
+  // xhttp.onerror = ()=>{    
+  //   panelwait01.style.display = "none"
+  // }
+  xhttp.open("GET", "list");
+  xhttp.send();
+}
+
+function doloadRemote(list){
+  const modal = document.getElementById('listCadModal')
+  const mbody = modal.querySelector(".modal-body");
+  mbody.innerHTML = ""
+  
+  const form = new bootstrap.Modal(modal, {})
+
+  const cellClick = (metaName, version)=>{  
+    panelwait01.style.display = "flex"  
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = function(result) {
+      load(fileForm, this.responseText);
+      form.hide()
+      panelwait01.style.display = "none"
+    }
+    xhttp.open("GET", "load?file_name="+metaName+"&version="+version);
+    xhttp.send();
+  }
+
+  list.forEach(i => {
+    const panelCard = createDivClass("card card bg-secondary text-white mt-3")
+    mbody.appendChild(panelCard)
+    const item = panelCard.appendChild(createDivClass("card-body"))
+    item.appendChild(createElementClass("p", "card-text")).innerHTML = i.descr 
+    if (i.versions.length > 1){
+      i.versions.forEach(v => {
+          const a = item.appendChild(createElementClass("a", "card-link"))
+          a.href = "#"
+          a.innerHTML = v;
+          a.onclick = ()=>{cellClick(i.name, v)     
+        }
+      })
+    } else {
+      item.style.cursor = "pointer"
+      if (i.versions.length == 1){
+        item.onclick = ()=>{cellClick(i.name, i.versions[0])}
+      } else {
+        item.onclick = ()=>{cellClick(i.name, null)}
+      }
+     }
+  });        
+  form.show()
 }
 const columnEditor = {
   form   : new bootstrap.Modal(document.getElementById('edt_colModal'), {}),
@@ -67,8 +269,30 @@ const columnEditor = {
                           }
                           
                           if (check(this.edtCtrlTp)){
-                              if (this.edtCtrlTp.value == "E")
-                              check(this.getCtrl(colNames.check))
+                              if (this.edtCtrlTp.value == "E"){
+                                  const edt = this.getCtrl(colNames.check)
+                                  if (check(edt)){
+                                      const list = edt.value.split("\n")
+                                      if (list.length < 2){
+                                        setError(edt)
+                                      }
+                                      const keys = []                                      
+                                      for (let i = 0; i < list.length; i++) {
+                                        const s = list[i];
+                                        let p = s.indexOf("=")
+                                        if ((p < 1) || (p >= s.length - 1)){
+                                          setError(edt)
+                                          break
+                                        }                 
+                                        const v = s.substring(0, p)
+                                        if (keys.includes(v)){
+                                          setError(edt)
+                                          break
+                                        }
+                                        keys.push(v)
+                                      }
+                                  }
+                              }
                           }
                           return erros
                     },
@@ -123,7 +347,7 @@ const columnEditor = {
         this.edtCtrlName = this.getCtrl("name")
         this.edtCtrlTp = this.getCtrl("tp")
         this.edtCtrlDec = this.getCtrl("dec")        
-        this.edtCtrlTp.onchange = ()=>{tpChanged()}
+        this.edtCtrlTp.onchange = ()=>{this.tpChanged()}
       }
 
 }
@@ -134,58 +358,6 @@ const setCellB = (s, cel)=>{cel.innerHTML = s.replaceAll("\n", "<br>")}
 
 const getCellA = (cel)=>{return cel.textContent}
 const getCellB = (cel)=>{return cel.innerHTML.replaceAll("<br>", "\n")}
-
-function createDiv(){
-    return document.createElement("div")
-}
-function createDivClass(classList){
-    let div = createDiv()
-    div.classList = classList
-    return div
-}
-function createDivClasses(classeList){
-  let div = createDiv()
-  classeList.forEach(s => {
-    div.classList.add(s)
-  });
-  return div
-}
-function createDivCtrl(classList, input, title){
-      if (title == undefined){
-        title = input.placeholder
-      }
-      let div = createDivClass(classList)
-      let label = div.appendChild(document.createElement("label"))
-      label.setAttribute("for", input.id)
-      label.innerHTML = title
-      div.appendChild(input)
-      return div
-}
-function createDivGroup(classList, input, title){
-  return createDivCtrl("form-group " + classList, input, title) 
-}
-
-function createInput(id, placeholder, required, inputType, classList){
-      let input = document.createElement("input")
-      if (inputType != undefined){
-        input.type = inputType
-      }
-      if (classList == undefined){
-        classList = "form-control"
-      }
-      input.classList = classList
-      if (placeholder != undefined){
-        input.placeholder = placeholder
-      }
-      input.id=id
-      
-      if (required != undefined){
-        input.required = required
-      }
-      return input
-} 
-function createInputText(id, placeholder, required){return createInput(id, placeholder, required, "text")} 
-function createInputNumber(id, placeholder, required){return createInput(id, placeholder, required, "number")} 
 
 const accordionFile = document.getElementById("accordionFile");
 const collapseFile = document.getElementById("collapseFile")
@@ -238,8 +410,8 @@ function createLine(lineCode, show){
           let dbodyA = dbody.appendChild(createDivClass("row"))
           let col = dbodyA.appendChild(createDivClass("col"))
 
-          this.line_header = createInput("line_header" + this.id, "", false, "checkbox", "form-check-input")                    
-          col.appendChild(createDivCtrl("form-check", this.line_header, "Essa linha é cabeçalho"))
+          this.line_header = createInput("b1" + this.id, "", false, "checkbox", "form-check-input")                    
+          col.appendChild(createDivCtrl("form-check", this.line_header, "Linha é cabeçalho"))
           
           this.line_header.onclick = ()=>{
             if (this.line_header.checked){
@@ -255,14 +427,16 @@ function createLine(lineCode, show){
           }
           col = dbodyA.appendChild(createDivClass("col-auto"))
           const btnAddCol = col.appendChild(document.createElement("button"))
-          btnAddCol.classList = "btn btn-info me-1"
+          btnAddCol.classList = "btn btn-outline-info me-1 btn-sm"
           btnAddCol.innerHTML = "Add Coluna"
           btnAddCol.type = "button"
+          btnAddCol.style.fontSize = "0.6rem"
 
           ctrl = col.appendChild(document.createElement("button"))
-          ctrl.classList = "btn btn-danger"
+          ctrl.classList = "btn btn-outline-danger btn-sm"
           ctrl.innerHTML = "Excluir linha"
           ctrl.type = "button"
+          ctrl.style.fontSize = btnAddCol.style.fontSize
           ctrl.onclick = ()=>{
             if (confirm("Excluir linha: " + lineCode)){
               this.line.remove()
@@ -270,13 +444,13 @@ function createLine(lineCode, show){
           }
           
           dbodyA = dbody.appendChild(createDivClass("row"))
-          this.line_level = createInputNumber("line_level" + this.id)
+          this.line_level = createInputNumber("b2" + this.id)
           dbodyA.appendChild(createDivGroup("col-4 col-sm-3 col-md-3", this.line_level, "Nível"))
        
-          this.line_parente = createInputText("line_parente" + this.id)
+          this.line_parente = createInputText("b3" + this.id)
           dbodyA.appendChild(createDivGroup("col-4 col-sm-3 col-md-3", this.line_parente, "Linha pai"))
 
-          this.table_sulfix = createInputText("table_sulfix" + this.id, "Prefixo do nome da tabela")
+          this.table_sulfix = createInputText("b4" + this.id, "Prefixo do nome da tabela")
           dbodyA.appendChild(createDivGroup("col-12 col-md-6", this.table_sulfix, "Nome no banco"))
           
           
@@ -445,20 +619,20 @@ function saveToFile(){
                   return false  
               }
 
-    const edtMeta_name = document.getElementById("meta_name")
-    const edt_table_name_prefix =  document.getElementById("file_table_name_prefix")
-    const file_desc = document.getElementById("file_desc")
+    // const edtMeta_name = document.getElementById("meta_name")
+    // const edt_table_name_prefix =  document.getElementById("file_table_name_prefix")
+    // const file_desc = document.getElementById("file_desc")
     
-    if (!isValidName(edtMeta_name.value)){
-          setError(edtMeta_name)
+    if (!isValidName(fileForm.edtMeta_name.value)){
+          setError(fileForm.edtMeta_name)
     }
-    if (!isValidName(edtMeta_name.value)){
-          setError(edt_table_name_prefix)
+    if (!isValidName(fileForm.edtTable_name_prefix.value)){
+          setError(fileForm.edtTable_name_prefix)
     }
 
     //check(edtMeta_name)
-    check(edtFileName)
-    check(edt_table_name_prefix)
+    //check(edtFileName)
+    //check(edt_table_name_prefix)
     //check(file_desc)
     
     if (erros != 0){
@@ -467,26 +641,25 @@ function saveToFile(){
 
   let lineHeaderCode = "0000"
 
-    let lines = getLines()     
-    if (lines.length < 1){
-      alert("Nenhuma linha informada")
-      return
-    }
+  let lines = getLines()     
+  if (lines.length < 1){
+    alert("Nenhuma linha informada")
+    return
+  }
 
-
-  const fileName = edtMeta_name.value
+  const fileName = frm.edtName.value
   const lfile = [
-        edtMeta_name.value, 
-        document.getElementById("file_versao").value, 
-        document.getElementById("file_line_code_pos").value, 
+        fileForm.edtMeta_name.value, 
+        fileForm.edtVersion.value, 
+        fileForm.edtline_code_pos.value, 
         lineHeaderCode,
-        document.getElementById("file_col_separator").value, 
+        fileForm.edtcol_separator.value, 
         fileName, 
-        document.getElementById("file_natural_keys").value, 
-        document.getElementById("file_date_mask").value, 
-        document.getElementById("file_version_col_name").value, 
-        edt_table_name_prefix.value, 
-        file_desc.value
+        fileForm.edtnatural_keys.value, 
+        fileForm.edtdate_mask.value, 
+        fileForm.edtversion_col_name.value, 
+        fileForm.edtTable_name_prefix.value, 
+        fileForm.edtdescr.value
     ]
 
   let csvContent = "data:text/csv;charset=utf-8,F" + joinList(lfile) + "\n"
@@ -505,7 +678,7 @@ function saveToFile(){
   document.body.appendChild(link);
   link.click();
 }
-function load(content){
+function load(frm, content){
   let lines = content.split('\n');
   if (lines.length < 1) return;
   lineSpliter.reset(lines)
@@ -514,23 +687,22 @@ function load(content){
    alert("Arquivo não é válido")
    return
   }
-  function setN(name, idx){
-      setCtrlValue(document.getElementById(name), cols[idx])
-  }
-  setN("meta_name", 1);
-  setN("file_versao", 2);
-  setN("file_line_code_pos", 3);
-  setN("file_col_separator", 6);
-  setCtrlValue(edtFileName, cols[7])
-  setN("file_natural_keys", 8);
-  setN("file_date_mask", 9);
-  setN("file_version_col_name", 10);
-  setN("file_table_name_prefix", 11);
-  setN("file_desc", 12);
+  //console.log(frm)
+  setCtrlValue(frm.edtMeta_name, cols[1]);
+  setCtrlValue(frm.edtVersion, cols[2]);
+  setCtrlValue(frm.edtline_code_pos, cols[3]);
+  setCtrlValue(frm.edtcol_separator, cols[6]);
+  setCtrlValue(frm.edtName, cols[7])
+  setCtrlValue(frm.edtnatural_keys, cols[8]);
+  setCtrlValue(frm.edtdate_mask, cols[9]);
+  setCtrlValue(frm.edtversion_col_name, cols[10]);
+  setCtrlValue(frm.edtTable_name_prefix, cols[11]);
+  setCtrlValue(frm.edtdescr, cols[12]);
   
-  let lineHeaderCode = cols[4]
-  labelfilename.innerHTML = edtFileName.value
-
+  const lineHeaderCode = cols[4]
+  frm.edtNameChange()
+  //lbfilen_ame.innerHTML = frm.edtName.value
+  //console.log(lbfile_name)
    let lineObj
    while (true){                
      cols = lineSpliter.next()
@@ -556,34 +728,4 @@ function load(content){
          console.log(cols)
      }
    }
-}
-const inputFile = document.createElement("input")
-inputFile.type = "file"
-inputFile.accept = "text/csv"
-
-inputFile.onchange = function () {
-  let files = this.files;               
-  if (files && files.length) {
-     let file = files[0];
-  
-     if (file.size > 3 * 1024 * 1024){
-        alert('Ficheiro demasiado grande')
-        return
-     }
-         let reader = new FileReader();
-         reader.onload = function(event){
-             load(event.target.result)
-         };
-         reader.readAsText(file, "windows-1252");
-  }
-};
-
-function loadFromFile(){
-  inputFile.click()
-}
-function loadExample(){
-  const xhttp = new XMLHttpRequest();
-  xhttp.onload = function() {load(this.responseText)}
-  xhttp.open("GET", "examples/layout - declan.csv");
-  xhttp.send();
 }
