@@ -468,7 +468,7 @@ function createLine(lineCode, show){
           div.style.overflow = "scroll"
           this.tableCols = div.appendChild(document.createElement("table"))
           this.tableCols.classList = "table table-striped table-bordered text-center"
-          let tr = this.tableCols.appendChild(document.createElement('tr'));
+          let tr = this.tableCols.appendChild(document.createElement('tbody'));
           colNames.titles.forEach(i => {tr.appendChild(document.createElement("th")).innerHTML = i});        
           btnAddCol.onclick = ()=>{columnEditor.addRow(this.tableCols)}
         }
@@ -595,7 +595,7 @@ function getLines(){
 function joinList(list){
     let r = ""
   list.forEach(i => {
-    if (i=="undefined" || i == ""){
+    if (i==undefined || i == ""){
       i = ""
     } else {
       i = '"' + i + '"'
