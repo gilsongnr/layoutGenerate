@@ -98,6 +98,7 @@ const fileForm = {
     }
     this.UL.appendChild(lineObj.line)
     this.lines.push(lineObj)
+    lineObj.level = 0
   },
   clear: function(){
     this.UL.innerHTML = ""
@@ -220,7 +221,7 @@ const lineEditor = {
           this.tableCols.appendChild(document.createElement('tbody'))
 
       },
-      validateCtrls: function(){
+      validateCtrls: function(lineObj){
                               let erros = 0;
                               const obj = this
                               function setError(edt){
@@ -237,22 +238,30 @@ const lineEditor = {
                               
                               check(this.line_code)
                               const s = this.line_parente.value
-                              if (s != undefined && s != ""){
+                              if (isSetText(s)){
                                 if (s == this.line_code.value) {
                                   setError(this.line_parente)                                        
                                 }else {
-                                  const p = fileForm.linesGet(s)                                                                
+                                  let p = fileForm.linesGet(s)                                                                
                                   if (!p){
                                     setError(this.line_parente)                                        
-                                  }                               
+                                  }
+                                  let i = p.level
+                                  while ((p = p.parentObj) != undefined){                                    
+                                    if (p == lineObj || p.level >= i){
+                                      setError(this.line_parente)
+                                      break;
+                                    }
+                                    i = p.level
+                                  }
                                 }
                               }
                               return erros
                         },
-      formExecute: function(then){
+      formExecute: function(lineObj, then){
                               const obj = this
                               function saveClick(evt){
-                                  if (obj.validateCtrls() == 0){
+                                  if (obj.validateCtrls(lineObj) == 0){
                                         then()
                                         obj.form.hide()                              
                                   }
@@ -261,25 +270,25 @@ const lineEditor = {
                               this.form.show()
                         },
     edit: function(lineObj){
+
         this.line_descr.style.height = this.line_descr.rows * 2 + "rem"
         
         for (let i = this.tableCols.rows.length - 1; i >= 0; i--) {
           this.tableCols.deleteRow(i);
         }    
 
-        this.line_code.value = lineObj.code        
+        setCtrlValue(this.line_code, lineObj.code)
         this.table_sulfix.placeholder = this.line_code.value
-        this.line_descr.value = lineObj.descr
-        this.line_parente.value = lineObj.parentCode
-        this.table_sulfix.value = lineObj.table_sulfix
+        setCtrlValue(this.line_descr.value, lineObj.descr)
+        setCtrlValue(this.line_parente.value, lineObj.parentCode)
+        setCtrlValue(this.table_sulfix.value, lineObj.table_sulfix)
         lineObj.cols.forEach(col => {
           tableColsAddRow(this.tableCols, col.name, col.tp, col.pos, col.size, col.dec, col.lit, col.check, col.desc)
         });
 
-        this.formExecute(()=>{                       
+        this.formExecute(lineObj, ()=>{                       
           lineObj.code = this.line_code.value
           lineObj.descr = this.line_descr.value
-          //lineObj.parentCode = this.line_parente.value
           lineObj.table_sulfix = this.table_sulfix.value
 
           lineObj.cols = []
@@ -303,11 +312,12 @@ const lineEditor = {
             if (isSetText(lineObj.parentCode)){
               const p = fileForm.linesGet(lineObj.parentCode)   
               if (p){
-                console.log(p.childs)
+                //console.log(p.childs)
                 //p.childs.remove(lineObj) 
                 const i = p.childs.indexOf(lineObj)
-                console.log(i)
+                //console.log(i)
                 p.childs.splice(i, 1) 
+                p.parentObj = undefined
                 //const a = p.line.parentElement
                 //console.log(a)
                 //a.removeChild(lineObj.line)   
@@ -327,6 +337,7 @@ let lineCount = 0
 function createLine(lineCode){ 
     const obj = {
       id: ++lineCount,
+      level: 0,
       code: lineCode,
         setIsHeader:  function(value){
         },
@@ -359,6 +370,9 @@ function createLine(lineCode){
           }
           this.UL.appendChild(lineObj.line)
           this.childs.push(lineObj)
+          lineObj.parentObj = this
+          lineObj.level = this.level + 1
+          //console.log("lineObj.level: " + lineObj.level)
         },
         get: function(lineCode){
           if (this.code == lineCode){
@@ -527,7 +541,7 @@ function load(frm, content){
            if (lineHeaderCode == lineObj.code){
              lineObj.setIsHeader(true)
            }
-           lineObj.level        = cols[3]
+           //lineObj.level        = cols[3]
            lineObj.parentCode   = cols[6]
            lineObj.table_sulfix = cols[11]
            lineObj.descr        = cols[12]
