@@ -89,10 +89,9 @@ const fileForm = {
     }
   },
   addLine: function (lineObj){
-    if (lineObj.parentCode != undefined && lineObj.parentCode != "") {
+    if (isSetText(lineObj.parentCode)) {
        const p = this.linesGet(lineObj.parentCode)
        if(p){
-         //p.childs.push(lineObj)
          p.lineAdd(lineObj)
          return
        }
@@ -240,11 +239,12 @@ const lineEditor = {
                               const s = this.line_parente.value
                               if (s != undefined && s != ""){
                                 if (s == this.line_code.value) {
+                                  setError(this.line_parente)                                        
                                 }else {
                                   const p = fileForm.linesGet(s)                                                                
                                   if (!p){
                                     setError(this.line_parente)                                        
-                                  }
+                                  }                               
                                 }
                               }
                               return erros
@@ -279,7 +279,7 @@ const lineEditor = {
         this.formExecute(()=>{                       
           lineObj.code = this.line_code.value
           lineObj.descr = this.line_descr.value
-          lineObj.parentCode = this.line_parente.value
+          //lineObj.parentCode = this.line_parente.value
           lineObj.table_sulfix = this.table_sulfix.value
 
           lineObj.cols = []
@@ -297,7 +297,26 @@ const lineEditor = {
               check: getCellB(cells[6]),
               desc: getCellB(cells[7])
             })
-          }      
+          }
+          
+          if (lineObj.parentCode != this.line_parente.value){            
+            if (isSetText(lineObj.parentCode)){
+              const p = fileForm.linesGet(lineObj.parentCode)   
+              if (p){
+                console.log(p.childs)
+                //p.childs.remove(lineObj) 
+                const i = p.childs.indexOf(lineObj)
+                console.log(i)
+                p.childs.splice(i, 1) 
+                //const a = p.line.parentElement
+                //console.log(a)
+                //a.removeChild(lineObj.line)   
+              }                                
+            }               
+
+            lineObj.parentCode = this.line_parente.value
+            fileForm.addLine(lineObj)     
+          }    
         })
     }
 }
