@@ -89,7 +89,7 @@ function setCtrlNoError(ctrl){
     ctrl.classList.remove(classCtrlError)  
 }
 
-function setCtrlInError(edt){
+function setCtrlInError(edt, error){
     const evtName = "change" 
     edt.classList.add(classCtrlError)
     edt.addEventListener(evtName, modifyText);
@@ -97,6 +97,9 @@ function setCtrlInError(edt){
         setCtrlNoError(edt)
         edt.removeEventListener(evtName, modifyText)
     }
+    //if (error != undefined){
+    //  edt.setCustomValidity(error)
+    //}
 }
 function setCtrlValue(edt, value){
     edt.value = value
@@ -109,8 +112,12 @@ function isValidName(name, required){
      return name.match(/^[A-Za-z_]+[\w_]*$/)
 }
 
-function checkText(s){
+function isSetText(s){
       return (s != undefined) && (s.trim() != "")
+}
+
+function checkText(s){
+      return isSetText(s)
 }
 
 const setCellA = (s, cel)=>{cel.textContent = s}

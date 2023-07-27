@@ -224,15 +224,15 @@ const lineEditor = {
       validateCtrls: function(lineObj){
                               let erros = 0;
                               const obj = this
-                              function setError(edt){
+                              function setError(edt, error){
                                   erros++;
-                                  setCtrlInError(edt)
+                                  setCtrlInError(edt, error)
                               }
                               function check(edt){
                                             if (checkText(edt.value)) {
                                               return true
                                             }
-                                            setError(edt)
+                                            setError(edt, "Campo obrigatório")
                                             return false  
                                         }
                               
@@ -240,16 +240,16 @@ const lineEditor = {
                               const s = this.line_parente.value
                               if (isSetText(s)){
                                 if (s == this.line_code.value) {
-                                  setError(this.line_parente)                                        
+                                  setError(this.line_parente, "Linha pai não pode ser a própria linha")                                        
                                 }else {
                                   let p = fileForm.linesGet(s)                                                                
                                   if (!p){
-                                    setError(this.line_parente)                                        
+                                    setError(this.line_parente, "Linha pai não encontrada")                                        
                                   }
                                   let i = p.level
                                   while ((p = p.parentObj) != undefined){                                    
                                     if (p == lineObj || p.level >= i){
-                                      setError(this.line_parente)
+                                      setError(this.line_parente, "Erro nos níveis")
                                       break;
                                     }
                                     i = p.level
@@ -279,9 +279,9 @@ const lineEditor = {
 
         setCtrlValue(this.line_code, lineObj.code)
         this.table_sulfix.placeholder = this.line_code.value
-        setCtrlValue(this.line_descr.value, lineObj.descr)
-        setCtrlValue(this.line_parente.value, lineObj.parentCode)
-        setCtrlValue(this.table_sulfix.value, lineObj.table_sulfix)
+        setCtrlValue(this.line_descr, lineObj.descr)
+        setCtrlValue(this.line_parente, lineObj.parentCode)
+        setCtrlValue(this.table_sulfix, lineObj.table_sulfix)
         lineObj.cols.forEach(col => {
           tableColsAddRow(this.tableCols, col.name, col.tp, col.pos, col.size, col.dec, col.lit, col.check, col.desc)
         });
