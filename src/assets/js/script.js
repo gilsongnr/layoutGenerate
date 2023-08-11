@@ -97,9 +97,12 @@ function setCtrlInError(edt, error){
         setCtrlNoError(edt)
         edt.removeEventListener(evtName, modifyText)
     }
-    //if (error != undefined){
-    //  edt.setCustomValidity(error)
-    //}
+    if (error != undefined){
+      edt.setCustomValidity(error)
+      edt.reportValidity();
+    }
+    console.log(edt)
+    console.log(error)
 }
 function setCtrlValue(edt, value){
     edt.value = value
@@ -147,7 +150,7 @@ const colNames = {
     list: ["name", "tp", "pos", "size", "dec", "literal", "Check", "descr"],
     titles: ["Nome", "Tipo", "Posição", "Tamanho", "Decimais", "Valor literal", "Check", "Descrição", ""]
 }
-function tableColsAddRow(table,  name, tp, pos, size, dec, lit, check, desc){
+function tableColsAddRow(table, name, tp, pos, size, dec, lit, check, desc){
   if (tp == "C") tp = "A"
   let row = table.insertRow()
   function add(value, proc, align){
@@ -218,11 +221,13 @@ function doloadRemote(list){
     item.appendChild(createElementClass("p", "card-text")).innerHTML = i.descr 
     if (i.versions.length > 1){
       i.versions.forEach(v => {
-          const a = item.appendChild(createElementClass("a", "card-link"))
-          a.href = "#"
+          const a = item.appendChild(createElementClass("a", "card-link text-white"))
+          a.href = ""
           a.innerHTML = v;
-          a.onclick = ()=>{cellClick(i.name, v)     
-        }
+          a.onclick = (evt)=>{
+            evt.preventDefault()
+            cellClick(i.name, v)                 
+          }
       })
     } else {
       item.style.cursor = "pointer"

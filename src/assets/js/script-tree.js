@@ -245,14 +245,15 @@ const lineEditor = {
                                   let p = fileForm.linesGet(s)                                                                
                                   if (!p){
                                     setError(this.line_parente, "Linha pai não encontrada")                                        
-                                  }
-                                  let i = p.level
-                                  while ((p = p.parentObj) != undefined){                                    
-                                    if (p == lineObj || p.level >= i){
-                                      setError(this.line_parente, "Erro nos níveis")
-                                      break;
+                                  }else{
+                                    let i = p.level
+                                    while ((p = p.parentObj) != undefined){                                    
+                                      if (p == lineObj || p.level >= i){
+                                        setError(this.line_parente, "Erro nos níveis")
+                                        break;
+                                      }
+                                      i = p.level
                                     }
-                                    i = p.level
                                   }
                                 }
                               }

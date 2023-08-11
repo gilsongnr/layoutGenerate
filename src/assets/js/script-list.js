@@ -284,17 +284,6 @@ function saveToFile(){
         erros++;
         setCtrlInError(edt)
     }
-    function check(edt){
-                  if (checkText(edt.value)) {
-                    return true
-                  }
-                  setError(edt)
-                  return false  
-              }
-
-    // const edtMeta_name = document.getElementById("meta_name")
-    // const edt_table_name_prefix =  document.getElementById("file_table_name_prefix")
-    // const file_desc = document.getElementById("file_desc")
     
     if (!isValidName(fileForm.edtMeta_name.value)){
           setError(fileForm.edtMeta_name)
@@ -302,11 +291,6 @@ function saveToFile(){
     if (!isValidName(fileForm.edtTable_name_prefix.value)){
           setError(fileForm.edtTable_name_prefix)
     }
-
-    //check(edtMeta_name)
-    //check(edtFileName)
-    //check(edt_table_name_prefix)
-    //check(file_desc)
     
     if (erros != 0){
         return
@@ -326,6 +310,7 @@ function saveToFile(){
         fileForm.edtVersion.value, 
         fileForm.edtline_code_pos.value, 
         lineHeaderCode,
+        fileForm.line_trailler_code,
         fileForm.edtcol_separator.value, 
         fileName, 
         fileForm.edtnatural_keys.value, 
@@ -373,6 +358,7 @@ function load(frm, content){
   setCtrlValue(frm.edtdescr, cols[12]);
   
   const lineHeaderCode = cols[4]
+  frm.line_trailler_code = cols[5]
   frm.edtNameChange()
   //lbfilen_ame.innerHTML = frm.edtName.value
   //console.log(lbfile_name)
@@ -395,7 +381,7 @@ function load(frm, content){
            lineObj.line_descr.value = cols[12]
            break
        case "C": 
-           tableColsAddRow(lineObj.tableCols, cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7])
+           tableColsAddRow(lineObj.tableCols, cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[11], cols[12])
            break
        default:
          console.log(cols)
