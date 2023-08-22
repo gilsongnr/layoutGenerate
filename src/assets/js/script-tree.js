@@ -4,7 +4,9 @@ const pane01 = document.getElementById("pane01")
 
 const panelwait01 = document.getElementById("panelwait01")
 panelwait01.style.display = "none"
-
+// document.body.onbeforeunload = ()=>{
+//   console.log("document.onbeforeunload")
+// }
 const fileForm = {
   UL: pane01.appendChild(createElementClass("ul", "list-group")),
   appendInput: function (id, title, classList){    
@@ -51,32 +53,52 @@ const fileForm = {
     
     this.edtdescr = createInputTextArea("a10", 1)
     this.panel.appendChild(createDivGroup("col-12", this.edtdescr, "Descrição do Arquivo")) 
-
-    this.inputFile = document.createElement("input")
-    this.inputFile.type = "file"
-    this.inputFile.accept = "text/csv"
-
-    const self = this
-    this.inputFile.onchange = function () {
-      let files = this.files;               
-      if (files && files.length) {
-        let file = files[0];
-      
-        if (file.size > 3 * 1024 * 1024){
-            alert('Ficheiro demasiado grande')
-            return
-        }
-        const reader = new FileReader();
-        reader.onload = function(event){
-            load(self, event.target.result)
-        };
-        //reader.readAsText(file, "windows-1252");
-        reader.readAsText(file, "UTF-8");
-      }
-    };      
-
     // this.lbfile_name = document.getElementById("lbfile_name")
     // this.edtName.onchange = this.edtNameChange
+
+
+    const _this = this
+    loader.onloadF = function(metaName, version, line_code_pos, lineHeaderCode, lineTraillerCode, col_separator, name, natural_keys, date_mask, version_col_name, table_name_prefix, descr){
+                        _this.clear() 
+                        setCtrlValue(_this.edtMeta_name, metaName);
+                        setCtrlValue(_this.edtVersion, version);
+                        setCtrlValue(_this.edtline_code_pos, line_code_pos);
+                        setCtrlValue(_this.edtcol_separator, col_separator);
+                        setCtrlValue(_this.edtName, name)
+                        setCtrlValue(_this.edtnatural_keys, natural_keys);
+                        setCtrlValue(_this.edtdate_mask, date_mask);
+                        setCtrlValue(_this.edtversion_col_name, version_col_name);
+                        setCtrlValue(_this.edtTable_name_prefix, table_name_prefix);
+                        setCtrlValue(_this.edtdescr, descr);
+                        
+                        _this.lineHeaderCode = lineHeaderCode
+                        _this.line_trailler_code = lineTraillerCode
+                        document.getElementById("pane01-title").innerHTML = name
+                      } 
+    let lineObj
+    loader.onloadline = function(lineCode, line_level, line_parente, table_sulfix, line_descr){
+                              lineObj = createLine(lineCode) 
+                              
+                              if (_this.lineHeaderCode == lineObj.code){
+                                lineObj.setIsHeader(true)
+                              }
+                              //lineObj.level        = cols[3]
+                              lineObj.parentCode   = line_parente
+                              lineObj.table_sulfix = table_sulfix
+                              lineObj.descr        = line_descr
+                              _this.addLine(lineObj) 
+                      } 
+    loader.onloadCol= function(colName, tp, pos, size, dec, lit, check, desc){
+        lineObj.cols.push({name: colName,
+          tp: tp,
+          pos: pos,
+          size: size,
+          dec: dec,
+          lit: lit,
+          check: check,
+          desc: desc}
+        )
+    } 
   },
   // edtNameChange: function(){
   //   this.lbfile_name.innerHTML = this.edtName.value
@@ -105,8 +127,6 @@ const fileForm = {
     this.lines = []
   }
 }
-//console.log(fileForm)
-function loadFromFile(){fileForm.inputFile.click()}
 
 fileForm.init()
 
@@ -425,7 +445,7 @@ function getLine(obj){
                     "", "", "", "", obj.table_sulfix, obj.descr], cols: cols};  
 }
 function _getLines(list, out){
-    console.log(list)
+    //console.log(list)
     for (let i = 0; i < list.length; i++) {
       const item = list[i]
         out.push(getLine(item))
@@ -439,13 +459,6 @@ function saveToFile(){
         erros++;
         setCtrlInError(edt)
     }
-    function check(edt){
-                  if (checkText(edt.value)) {
-                    return true
-                  }
-                  setError(edt)
-                  return false  
-              }
     
     if (!isValidName(fileForm.edtMeta_name.value)){
           setError(fileForm.edtMeta_name)
@@ -500,67 +513,4 @@ function saveToFile(){
   link.setAttribute("download", csvFileName);
   document.body.appendChild(link);
   link.click();
-}
-
-function load(frm, content){
-  fileForm.clear() 
-  if (content.startsWith(prefixError)){
-    alert(content.substring(prefixError.length))
-    return
-  }
-  let lines = content.split('\n');
-  if (lines.length < 1) return;
-  lineSpliter.reset(lines)
-  let cols = lineSpliter.next()
-  if (cols[0] != "F"){
-   alert("Arquivo não é válido")
-   return
-  }
-  setCtrlValue(frm.edtMeta_name, cols[1]);
-  setCtrlValue(frm.edtVersion, cols[2]);
-  setCtrlValue(frm.edtline_code_pos, cols[3]);
-  setCtrlValue(frm.edtcol_separator, cols[6]);
-  setCtrlValue(frm.edtName, cols[7])
-  setCtrlValue(frm.edtnatural_keys, cols[8]);
-  setCtrlValue(frm.edtdate_mask, cols[9]);
-  setCtrlValue(frm.edtversion_col_name, cols[10]);
-  setCtrlValue(frm.edtTable_name_prefix, cols[11]);
-  setCtrlValue(frm.edtdescr, cols[12]);
-  document.getElementById("pane01-title").innerHTML = cols[7]
-  const lineHeaderCode = cols[4]
-  frm.line_trailler_code = cols[5]
-   let lineObj
-   while (true){                
-     cols = lineSpliter.next()
-     if (cols.length == 0){
-       break
-     }
-     switch (cols[0]) {
-       case "L": 
-           lineObj = createLine(cols[1]) 
-           
-           if (lineHeaderCode == lineObj.code){
-             lineObj.setIsHeader(true)
-           }
-           //lineObj.level        = cols[3]
-           lineObj.parentCode   = cols[6]
-           lineObj.table_sulfix = cols[11]
-           lineObj.descr        = cols[12]
-           fileForm.addLine(lineObj)         
-           break
-       case "C":    
-           lineObj.cols.push({name: cols[1],
-                              tp: cols[2],
-                              pos: cols[3],
-                              size: cols[4],
-                              dec: cols[5],
-                              lit: cols[6],
-                              check: cols[11],
-                              desc: cols[12]}
-                            )
-           break
-       default:
-         console.log(cols)
-     }
-   }
 }

@@ -1,6 +1,3 @@
-
-const prefixError = "ERROR="
-
 function joinList(list){
     let r = ""
   list.forEach(i => {
@@ -180,68 +177,10 @@ function tableColsAddRow(table, name, tp, pos, size, dec, lit, check, desc){
   }
   return row;
 }
-
-function loadRemote(){  
-  panelwait01.style.display = "flex"
-  const xhttp = new XMLHttpRequest();
-  xhttp.onload = function(result) {
-    try {
-      doloadRemote(JSON.parse(this.responseText));
-    } finally {
-      panelwait01.style.display = "none"
-    }    
-  }
-  xhttp.open("GET", "list");
-  xhttp.send();
-}
-
-function doloadRemote(list){
-  const modal = document.getElementById('listCadModal')
-  const mbody = modal.querySelector(".modal-body");
-  mbody.innerHTML = ""
-  
-  const form = new bootstrap.Modal(modal, {})
-
-  const cellClick = (metaName, version)=>{  
-    panelwait01.style.display = "flex"  
-    const xhttp = new XMLHttpRequest();
-    xhttp.onload = function(result) {
-      load(fileForm, this.responseText);
-      form.hide()
-      panelwait01.style.display = "none"
-    }
-    xhttp.open("GET", "load?file_name="+metaName+"&version="+version);
-    xhttp.send();
-  }
-
-  list.forEach(i => {
-    const panelCard = createDivClass("card card bg-secondary text-white mt-3")
-    mbody.appendChild(panelCard)
-    const item = panelCard.appendChild(createDivClass("card-body"))
-    item.appendChild(createElementClass("p", "card-text")).innerHTML = i.descr 
-    if (i.versions.length > 1){
-      i.versions.forEach(v => {
-          const a = item.appendChild(createElementClass("a", "card-link text-white"))
-          a.href = ""
-          a.innerHTML = v;
-          a.onclick = (evt)=>{
-            evt.preventDefault()
-            cellClick(i.name, v)                 
-          }
-      })
-    } else {
-      item.style.cursor = "pointer"
-      if (i.versions.length == 1){
-        item.onclick = ()=>{cellClick(i.name, i.versions[0])}
-      } else {
-        item.onclick = ()=>{cellClick(i.name, null)}
-      }
-     }
-  });        
-  form.show()
-}
-
-
+// function createInputFile(onloadF, onloadline, onloadCol){
+//   //let inputFile = document.createElement("input");
+//   return inputFile 
+// }
 
 const columnEditor = {
   form   : new bootstrap.Modal(document.getElementById('edt_colModal'), {}),
@@ -349,3 +288,125 @@ const columnEditor = {
 
 }
 columnEditor.init()
+
+//********* */
+const loader = {
+  inputFile: document.createElement("input"),
+  load: function(content){
+    const lines = content.split('\n');
+    if (lines.length < 1) return;
+    lineSpliter.reset(lines)
+    let cols = lineSpliter.next()
+    if (cols[0] != "F"){
+      alert("Arquivo não é válido")
+      return false
+    }
+    
+    this.onloadF(cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8], cols[9], cols[10], cols[11], cols[12])
+    
+    while (true){                
+      cols = lineSpliter.next()
+      if (cols.length == 0){
+        break
+      }
+      switch (cols[0]) {
+        case "L": 
+            this.onloadline(cols[1], cols[3], cols[6], cols[11], cols[12])
+            break
+        case "C": 
+            this.onloadCol(cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[11], cols[12])
+            break
+        default:
+          console.log(cols)
+      }
+    }
+    return true
+  },
+  loadLocal: function (){this.inputFile.click()},  
+  loadRemote: function (){  
+    const _this = this
+    panelwait01.style.display = "flex"
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      try {
+        //doloadRemote(JSON.parse(this.responseText));
+        const list = JSON.parse(this.responseText);
+
+        const modal = document.getElementById('listCadModal')
+        const mbody = modal.querySelector(".modal-body");
+        mbody.innerHTML = ""
+        
+        const form = new bootstrap.Modal(modal, {})
+      
+        const cellClick = (metaName, version)=>{  
+          panelwait01.style.display = "flex"  
+          const xhttp = new XMLHttpRequest();
+          xhttp.onload = function(result) {
+            const content = this.responseText
+            const prefixError = "ERROR="
+            if (content.startsWith(prefixError)){
+              alert(content.substring(prefixError.length))
+            }else if (_this.load(content)){
+              form.hide()              
+            }
+            panelwait01.style.display = "none"
+          }
+          xhttp.open("GET", "load?file_name="+metaName+"&version="+version);
+          xhttp.send();
+        }
+      
+        list.forEach(i => {
+          const panelCard = createDivClass("card card bg-secondary text-white mt-3")
+          mbody.appendChild(panelCard)
+          const item = panelCard.appendChild(createDivClass("card-body"))
+          item.appendChild(createElementClass("p", "card-text")).innerHTML = i.descr 
+          if (i.versions.length > 1){
+            i.versions.forEach(v => {
+                const a = item.appendChild(createElementClass("a", "card-link text-white"))
+                a.href = ""
+                a.innerHTML = v;
+                a.onclick = (evt)=>{
+                  evt.preventDefault()
+                  cellClick(i.name, v)                 
+                }
+            })
+          } else {
+            item.style.cursor = "pointer"
+            if (i.versions.length == 1){
+              item.onclick = ()=>{cellClick(i.name, i.versions[0])}
+            } else {
+              item.onclick = ()=>{cellClick(i.name, null)}
+            }
+           }
+        });        
+        form.show()
+      } finally {
+        panelwait01.style.display = "none"
+      }    
+    }
+    xhttp.open("GET", "list");
+    xhttp.send();
+  },
+  init: function(){
+    this.inputFile.type = "file"
+    this.inputFile.accept = "text/csv"
+    const _this = this
+    this.inputFile.onchange = function () {
+      if (this.files && this.files.length) {
+        let file = this.files[0];
+        if (file.size > 3 * 1024 * 1024){
+            alert('Arquivo muito grande')
+            return
+        }
+        const reader = new FileReader();
+        reader.onload = function(event){
+          //console.log(_this)
+          _this.load(event.target.result)
+        };
+        reader.readAsText(file, "windows-1252");
+        //reader.readAsText(file, "UTF-8");
+      }
+    }
+  }
+}
+loader.init()
