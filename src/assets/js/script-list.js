@@ -47,7 +47,6 @@ const fileForm = {
 
     const _this = this
     loader.onloadF = function(metaName, version, line_code_pos, lineHeaderCode, line_trailler_code, col_separator, name, natural_keys, date_mask, version_col_name, table_name_prefix, descr){
-                        console.log("onloadF")
                         setCtrlValue(_this.edtMeta_name, metaName);
                         setCtrlValue(_this.edtVersion, version);
                         setCtrlValue(_this.edtline_code_pos, line_code_pos);
